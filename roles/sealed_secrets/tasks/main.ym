@@ -1,0 +1,31 @@
+# roles/sealed_secrets/tasks/main.yml
+- name: Crear namespace si no existe
+  kubernetes.core.k8s:
+    api_version: v1
+    kind: Namespace
+    name: "{{ sealed_secrets_namespace }}"
+    state: present
+    kubeconfig: "{{ kubeconfig_path }}"
+
+- name: Añadir repositorio Helm de Bitnami
+  command: helm repo add bitnami https://charts.bitnami.com/bitnami
+  register: add_repo
+  failed_when: add_repo.rc != 0 and "exists" not in add_repo.stderr
+  changed_when: false
+
+- name: Actualizar repositorios de Helm
+  command: helm repo update
+
+- name: Instalar Sealed Secrets Controller con Helm
+  command: >
+    helm upgrade --install {{ sealed_secrets_release_name }} bitnami/sealed-secrets
+    --namespace {{ sealed_secrets_namespace }}
+    --version {{ sealed_secrets_chart_version }}
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
+
+- name: Esperar a que el controlador esté listo
+  shell: kubectl wait --namespace {{ sealed_secrets_namespace }} \
+    --for=condition=Ready pod -l app.kubernetes.io/name=sealed-secrets --timeout=120s
+  environment:
+    KUBECONFIG: "{{ kubeconfig_path }}"
