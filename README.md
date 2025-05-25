@@ -1,65 +1,90 @@
 # 🔐 k3s-secrets-cluster
 
-Automatización completa para instalar y configurar **Sealed Secrets** de Bitnami en un clúster **K3s** usando **Ansible**. Esta herramienta permite gestionar secretos cifrados seguros dentro de Kubernetes, compatibles con flujos GitOps y control de versiones en Git.
+Automatización completa para instalar y configurar **Sealed Secrets** de Bitnami en un clúcster **K3s** usando **Ansible**. Esta herramienta permite gestionar secretos cifrados seguros dentro de Kubernetes, compatibles con flujos GitOps y control de versiones en Git.
 
 ---
 
 ## 📦 Características
 
-- Instalación de **Sealed Secrets Controller** vía Helm.
-- Plantillas de secretos (`Opaque`) para cifrado.
-- Generación de manifiestos sellados con `kubeseal`.
-- Reutilización de secretos en Jenkins, ArgoCD, Prometheus, Grafana, etc.
-- Compatible con arquitectura HA de K3s.
-- Preparado para CI/CD y uso con ArgoCD y GitHub.
+* Instalación de **Sealed Secrets Controller** vía Helm.
+* Plantillas de secretos (`Opaque`) para cifrado.
+* Generación de manifiestos sellados con `kubeseal`.
+* Reutilización de secretos en Jenkins, ArgoCD, Prometheus, Grafana, etc.
+* Compatible con arquitectura HA de K3s.
+* Preparado para CI/CD y uso con ArgoCD y GitHub.
 
 ---
 
-## 🚀 Requisitos
+## 🗂️ Estructura Recomendada
 
-- Ansible >= 2.14
-- Helm y kubectl instalados en el nodo de control
-- Acceso válido al clúster K3s vía kubeconfig
-- kubeseal instalado localmente
+```
+k3s-secrets-cluster/
+├── group_vars/
+│   └── all.yml
+├── inventory/
+│   └── hosts.ini
+├── playbooks/
+│   └── install_sealed_secrets.yml
+├── roles/
+│   ├── sealed_secrets/
+│   │   └── tasks/main.yml
+│   └── kubeseal_installer/
+│       └── tasks/main.yml
+├── templates/
+│   └── secret-example.yaml.j2
+└── README.md
+```
 
 ---
 
-## 🧪 Instalación del Controller
+## 🚀 Instalación del Controller y Kubeseal
 
-Ejecutar el siguiente comando para instalar el Sealed Secrets Controller:
+Ejecutar:
 
 ```bash
 ansible-playbook -i inventory/hosts.ini playbooks/install_sealed_secrets.yml
 ```
 
+Esto instala el controlador en el clúcster y la herramienta `kubeseal` localmente.
+
 ---
 
-## ✍️ Ejemplo de Cifrado Manual
+## 🔧 Ejemplo de Cifrado Manual
 
-### Obtener el certificado público del controlador
+### 1. Obtener el certificado público
 
 ```bash
 kubeseal --fetch-cert \
   --controller-name=sealed-secrets \
-  --controller-namespace=kube-system \
-  > pub-cert.pem
+  --controller-namespace=kube-system > pub-cert.pem
 ```
 
-### Renderizar el secreto con Ansible
+### 2. Crear plantilla de Secret
+
+Archivo: `templates/secret-example.yaml.j2`
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: {{ secret_name }}
+  namespace: {{ secret_namespace }}
+type: Opaque
+data:
+  password: {{ password | b64encode }}
+```
+
+### 3. Renderizar y cifrar
 
 ```bash
 ansible -i inventory/hosts.ini localhost \
   -m template -a "src=templates/secret-example.yaml.j2 dest=/tmp/my-secret.yaml" \
-  -e "secret_name=my-basic-auth secret_namespace=default password=admin123"
-```
+  -e "secret_name=admin-secret secret_namespace=default password=MiPassword"
 
-### Cifrar con kubeseal
-
-```bash
 kubeseal --cert pub-cert.pem --format yaml < /tmp/my-secret.yaml > my-secret-sealed.yaml
 ```
 
-### Aplicar en el clúster
+### 4. Aplicar al clúcster
 
 ```bash
 kubectl apply -f my-secret-sealed.yaml
@@ -67,102 +92,63 @@ kubectl apply -f my-secret-sealed.yaml
 
 ---
 
-## ✅ Pasos Teóricos Ordenados
+## 🔄 Flujo GitOps con ArgoCD
 
-1️⃣ **Instalar Sealed Secrets Controller**
+1. Instala `sealed-secrets` controller con Ansible + Helm.
+2. Obtén `pub-cert.pem` y cifra secretos localmente.
+3. Versiona `my-secret-sealed.yaml` en Git.
+4. ArgoCD detecta cambios y aplica el manifiesto.
+5. El controlador crea el Secret real dentro del clúcster.
+6. Tu app lo consume normalmente.
 
-- **Dónde**: Dentro del clúster Kubernetes (K3s).
-- **Cómo**: Usando Helm y un playbook de Ansible.
-- **Qué hace**: Despliega un pod que contiene las claves para descifrar secretos.
+---
 
-2️⃣ **Obtener la clave pública del controlador**
+## 🔐 Integración con Ingress
 
-- **Por qué**: Para cifrar secretos desde tu máquina o CI sin exponer claves privadas.
-- **Comando**:
-
-```bash
-kubeseal --fetch-cert --controller-namespace=kube-system > sealed-secrets-public-cert.pem
-```
-
-3️⃣ **Crear un Secret Kubernetes como plantilla (NO aplicar)**
-
-Ejemplo:
+Traefik, por ejemplo, puede usar un Secret cifrado:
 
 ```yaml
-apiVersion: v1
-kind: Secret
 metadata:
-  name: traefik-dashboard-secret
-  namespace: kube-system
-type: Opaque
-data:
-  traefik-dashboard-user: <base64>
-  traefik-dashboard-pass: <base64>
-```
-
-4️⃣ **Sellar el secreto (convertirlo en SealedSecret)**
-
-- **Herramienta**: kubeseal.
-- **Comando**:
-
-```bash
-kubeseal --format=yaml \
-  --cert sealed-secrets-public-cert.pem \
-  < my-secret.yaml > my-sealed-secret.yaml
-```
-
-5️⃣ **Subir el SealedSecret al repositorio Git**
-
-- **Qué hace**: Este archivo `my-sealed-secret.yaml` es seguro para GitHub, GitLab o cualquier CI/CD.
-- **Automatización**: Será aplicado por ArgoCD automáticamente.
-
-6️⃣ **ArgoCD aplica el SealedSecret y lo convierte en un Secret real**
-
-- **Cómo funciona**: El controlador dentro de K3s detecta los SealedSecret, los descifra y crea un Secret real automáticamente.
-
-7️⃣ **Tu servicio (ej: Traefik) lo usa normalmente**
-
-Ejemplo en `values.yaml` o `ingress`:
-
-```yaml
-traefik.ingress.kubernetes.io/auth-secret: traefik-dashboard-secret
+  annotations:
+    traefik.ingress.kubernetes.io/auth-secret: traefik-dashboard-secret
 ```
 
 ---
 
-## 🧩 Ejemplos de Uso Típico
+## 🧩 Secretos Típicos a Cifrar
 
-- `jenkins-admin-secret`
-- `grafana-admin-secret`
-- `argocd-secret`
-- `traefik-dashboard-secret`
-- `webhook-github-token`
-- `smtp-password-secret`
+* `jenkins-admin-secret`
+* `grafana-admin-secret`
+* `argocd-secret`
+* `traefik-dashboard-secret`
+* `smtp-password-secret`
 
 ---
 
-## 🔒 Ventajas
+ansible localhost -m template \
+  -a "src=templates/secret-example.yaml.j2 dest=jenkins-secret.yaml" \
+  -e '{"secret_name": "jenkins-admin-secret", "secret_namespace": "kube-system", "secret_data": {"username": "admin", "password": "s3cret"}}'
 
-- Puedes hacer GitOps seguro (guardar secretos en Git sin riesgo).
-- Solo el clúster puede leer los secretos.
-- Integración nativa con ArgoCD, Jenkins, etc.
+
+
+## 🛡️ Seguridad y Buenas Prácticas
+
+* Solo almacena en Git los `SealedSecret`, no `Secret` normales.
+* Publica `pub-cert.pem`, **nunca** la clave privada.
+* Usa Sealed Secrets desde el inicio para servicios internos (ingress, dashboards).
 
 ---
 
 ## 📘 Referencias
 
-- [Bitnami Sealed Secrets](https://github.com/bitnami-labs/sealed-secrets)
-- [Kubeseal CLI](https://github.com/bitnami-labs/sealed-secrets#kubeseal)
+* [https://github.com/bitnami-labs/sealed-secrets](https://github.com/bitnami-labs/sealed-secrets)
+* [https://github.com/bitnami-labs/sealed-secrets#kubeseal](https://github.com/bitnami-labs/sealed-secrets#kubeseal)
 
 ---
 
-## ⚠️ Notas de Seguridad
-
-- Nunca guardes Secret sin cifrar en repositorios públicos.
-- El archivo `pub-cert.pem` puede publicarse, pero nunca la clave privada.
-
----
-
-## 🧑‍💻 Autor
+## 👨‍💻 Autor
 
 Desarrollado por Victor H. Gálvez
+
+
+
