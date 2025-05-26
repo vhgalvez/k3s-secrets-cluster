@@ -1,0 +1,40 @@
+# roles/kubeseal_cli_local_installer/tasks/main.yml
+- name: Crear directorio temporal para kubeseal
+  ansible.builtin.tempfile:
+    state: directory
+    suffix: kubeseal_installer
+  register: tmpdir_kubeseal
+
+- name: Descargar kubeseal v0.24.6
+  ansible.builtin.get_url:
+    url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v0.24.6/kubeseal-0.24.6-linux-amd64.tar.gz"
+    dest: "{{ tmpdir_kubeseal.path }}/kubeseal.tar.gz"
+    mode: '0644'
+
+- name: Extraer kubeseal
+  ansible.builtin.unarchive:
+    src: "{{ tmpdir_kubeseal.path }}/kubeseal.tar.gz"
+    dest: "{{ tmpdir_kubeseal.path }}"
+    remote_src: yes
+
+- name: Instalar kubeseal en /usr/local/bin
+  ansible.builtin.copy:
+    src: "{{ tmpdir_kubeseal.path }}/kubeseal"
+    dest: /usr/local/bin/kubeseal
+    mode: '0755'
+    remote_src: yes
+
+- name: Verificar versión instalada de kubeseal
+  ansible.builtin.command: kubeseal --version
+  register: kubeseal_version_output
+  changed_when: false
+
+- name: Mostrar versión de kubeseal instalada
+  ansible.builtin.debug:
+    var: kubeseal_version_output.stdout
+
+- name: Limpiar directorio temporal
+  ansible.builtin.file:
+    path: "{{ tmpdir_kubeseal.path }}"
+    state: absent
+  when: tmpdir_kubeseal.path is defined
