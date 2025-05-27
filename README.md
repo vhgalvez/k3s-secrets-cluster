@@ -160,38 +160,52 @@ Este repositorio contiene toda la automatización para instalar Sealed Secrets C
 
 ```plaintext
 k3s-secrets-cluster/
+├── inventory/
+│   └── hosts.ini                     # 🔧 Inventario de nodos para Ansible
+│
 ├── playbooks/
-│   ├── install_sealed_secrets.yml         # Instala el controller Sealed Secrets
-│   ├── generate_base_secrets.yml          # Genera los YAML base usando variables
-│   ├── encrypt_secrets.yml                # Cifra los secretos con kubeseal
-│   ├── htpasswd_secrets.yml               # Genera secrets de autenticación htpasswd (usando stringData)
-│   └── auth_secrets.yml                   # Aplica Secrets con hash htpasswd generados dinámicamente (con kubernetes.core.k8s)
+│   ├── install_sealed_secrets.yml   # 🚀 Instala el controller de Sealed Secrets en el clúster
+│   ├── install_kubeseal.yml         # 🛠️ Instala la herramienta kubeseal en localhost
+│   ├── generate_base_secrets.yml    # 📝 Renderiza secretos desde variables (plantillas básicas)
+│   ├── auth_secrets.yml             # 🔐 Crea secretos htpasswd en el clúster
+│   ├── render_and_encrypt_secrets.yml # 🔄 Renderiza *.j2 y los cifra con kubeseal
+│
 ├── roles/
-│   ├── sealed_secrets/                    # Rol que instala el Sealed Secrets Controller
+│   ├── sealed_secrets/
 │   │   └── tasks/
-│   │       └── main.yml
-│   ├── kubeseal_installer/                # Rol que instala kubeseal CLI
-│   │   └── tasks/
-│   │       └── main.yml
-├── secrets-templates/                     # Plantillas Jinja2 de secretos (no cifrados)
-│   ├── jenkins-admin-secret.yaml.j2
-│   ├── grafana-admin-secret.yaml.j2
-│   ├── prometheus-basic-auth.yaml.j2
+│   │       └── main.yml             # 💾 Lógica para instalar el controller desde Helm
+│   └── kubeseal_installer/
+│       └── main.yml                 # 🧩 Instala kubeseal binario localmente
+│
+├── secrets-templates/               # 🧬 Plantillas Jinja2 (.j2) para generar secretos
 │   ├── argocd-secret.yaml.j2
+│   ├── grafana-admin-secret.yaml.j2
+│   ├── jenkins-admin-secret.yaml.j2
 │   ├── longhorn-ui-secret.yaml.j2
-│   └── ...
-├── output-sealed/                         # Secretos cifrados listos para GitOps
-│   ├── jenkins/
+│   ├── prometheus-basic-auth.yaml.j2
+│   ├── traefik-dashboard-secret.yaml.j2
+│   ├── smtp-password-secret.yaml.j2
+│   ├── webhook-github-secret.yaml.j2
+│   └── postgres-secret.yaml.j2
+│
+├── secrets-rendered/                # 🧾 Secretos generados desde las plantillas (previo a cifrado)
+│   └── *.yaml
+│
+├── output-sealed/                   # 🔐 Secretos cifrados con kubeseal (listos para aplicar o ArgoCD)
 │   ├── monitoring/
+│   ├── ci/
 │   ├── argocd/
 │   ├── longhorn/
+│   ├── kube-system/
 │   └── ...
+│
 ├── vars/
-│   └── main.yml                           # Variables centralizadas: usuarios, contraseñas, paths
-├── inventory/
-│   └── hosts.ini                          # Inventario de Ansible para los nodos del clúster
-├── .gitignore
-└── README.md                              # Documentación y uso
+│   └── main.yml                     # ⚙️ Variables centrales: usuarios, contraseñas, rutas, config
+│
+├── Makefile                         # (opcional) ⚙️ Comandos útiles como install, encrypt, apply
+├── README.md                        # 📘 Documentación del proyecto
+└── requirements.yml                 # (opcional) 🔗 Roles o colecciones Ansible necesarias
+                          # Documentación y uso
 ```
 
 ## ✅ Flujo de Uso

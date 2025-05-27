@@ -1,21 +1,38 @@
 # vars/main.yml
 
-# 🔐 Credenciales para autenticación htpasswd (auth_secrets.yml y generate_base_secrets.yml)
+# 🔐 Usuario común (opcional)
 common_auth_user: admin
 
-prometheus_auth_password: prom123
-grafana_auth_password: graf456
-jenkins_auth_password: jenk789
-argocd_auth_password: argopass
-longhorn_auth_password: longpass
+# 🔐 Traefik Dashboard (Basic Auth)
+traefik_basic_auth: "admin:$apr1$3L3fT1rX$y2N1R7D2aGZgPfhnxPzTy1"
 
-# 📦 Ruta al certificado público de Sealed Secrets (exportado con kubeseal --fetch-cert)
-pub_cert_path: /path/to/pub-cert.pem
+# 🔐 Prometheus
+prometheus_auth_user: admin
+prometheus_auth_pass: prom123
 
-# 📘 Kubeconfig para interactuar con el clúster
+# 🔐 Grafana
+grafana_auth_user: admin
+grafana_auth_pass: graf456
+
+# 🔐 Jenkins
+jenkins_auth_user: admin
+jenkins_auth_pass: jenk789
+
+# 🔐 ArgoCD
+argocd_auth_user: admin
+argocd_auth_pass: argopass
+
+# 🔐 Longhorn
+longhorn_auth_user: admin
+longhorn_auth_pass: longpass
+
+# 📦 Certificado público de Sealed Secrets
+pub_cert_path: /home/victory/secrets/pub-cert.pem
+
+# 📘 Ruta al kubeconfig
 kubeconfig_path: "/home/victory/.kube/config"
 
-# 📥 Configuración del Helm Chart de Sealed Secrets
+# 📥 Helm Chart Sealed Secrets
 sealed_secrets_namespace: "kube-system"
 sealed_secrets_release_name: "sealed-secrets"
 sealed_secrets_chart_version: "2.15.3"
