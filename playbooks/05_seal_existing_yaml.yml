@@ -1,4 +1,4 @@
-# playbooks\encrypt_secrets.yml
+# playbooks\05_seal_existing_yaml.yml
 - name: 🔐 Cifrar secretos con kubeseal
   hosts: localhost
   become: false
