@@ -1,20 +1,13 @@
 # vars/main.yml
 
 # 🔐 Credenciales para autenticación htpasswd (auth_secrets.yml y generate_base_secrets.yml)
-prometheus_auth_user: admin
-prometheus_auth_pass: prom123
+common_auth_user: admin
 
-grafana_auth_user: admin
-grafana_auth_pass: graf456
-
-jenkins_auth_user: admin
-jenkins_auth_pass: jenk789
-
-argocd_auth_user: admin
-argocd_auth_pass: argopass
-
-longhorn_auth_user: admin
-longhorn_auth_pass: longpass
+prometheus_auth_password: prom123
+grafana_auth_password: graf456
+jenkins_auth_password: jenk789
+argocd_auth_password: argopass
+longhorn_auth_password: longpass
 
 # 📦 Ruta al certificado público de Sealed Secrets (exportado con kubeseal --fetch-cert)
 pub_cert_path: /path/to/pub-cert.pem
