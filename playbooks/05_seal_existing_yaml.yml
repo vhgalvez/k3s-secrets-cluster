@@ -37,7 +37,7 @@
       loop_control:
         label: "{{ item.name }}"
 
-        - name: "🔐 Cifrar secreto con kubeseal: {{ item.name }}"
+    - name: "🔐 Cifrar secreto con kubeseal: {{ item.name }}"
       command: >
         kubeseal --format yaml
         --cert {{ pub_cert_path }}
