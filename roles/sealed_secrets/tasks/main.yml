@@ -20,6 +20,7 @@
   command: >
     helm upgrade --install {{ sealed_secrets_release_name }} bitnami/sealed-secrets
     --namespace {{ sealed_secrets_namespace }}
+    --create-namespace
     --version {{ sealed_secrets_chart_version }}
   environment:
     KUBECONFIG: "{{ kubeconfig_path }}"
