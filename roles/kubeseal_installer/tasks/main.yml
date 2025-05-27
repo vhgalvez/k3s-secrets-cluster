@@ -1,4 +1,4 @@
-# roles\kubeseal_installer\main.yml
+# roles\kubeseal_installer\tasks\main.yml
 - name: 📁 Crear directorio temporal
   tempfile:
     state: directory
