@@ -1,5 +1,7 @@
 # roles/kubeseal_installer/tasks/main.yml
 
+# roles/kubeseal_installer/tasks/main.yml
+
 - name: 📁 Crear directorio temporal
   tempfile:
     state: directory
@@ -22,16 +24,9 @@
     dest: "{{ tmpdir.path }}"
     remote_src: yes
 
-- name: 🔍 Localizar binario extraído
-  find:
-    paths: "{{ tmpdir.path }}"
-    patterns: "kubeseal"
-    file_type: file
-  register: kubeseal_bin
-
 - name: 📌 Instalar kubeseal en /usr/local/bin
   copy:
-    src: "{{ kubeseal_bin.files[0].path }}"
+    src: "{{ tmpdir.path }}/kubeseal-{{ version_kubeseal }}-linux-amd64"
     dest: /usr/local/bin/kubeseal
     mode: '0755'
     remote_src: yes
