@@ -1,5 +1,0 @@
-# group_vars\all.yml
-kubeconfig_path: "/home/victory/.kube/config"
-sealed_secrets_namespace: "kube-system"
-sealed_secrets_release_name: "sealed-secrets"
-sealed_secrets_chart_version: "2.15.3"

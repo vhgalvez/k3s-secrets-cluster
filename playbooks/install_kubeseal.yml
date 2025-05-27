@@ -1,0 +1,10 @@
+- name: 🛠️ Instalar kubeseal en localhost
+  hosts: localhost
+  become: true
+  gather_facts: false
+
+  vars_files:
+    - ../vars/main.yml
+
+  roles:
+    - kubeseal_installer

@@ -1,0 +1,28 @@
+# vars/main.yml
+
+# 🔐 Credenciales para autenticación htpasswd (auth_secrets.yml y generate_base_secrets.yml)
+prometheus_auth_user: admin
+prometheus_auth_pass: prom123
+
+grafana_auth_user: admin
+grafana_auth_pass: graf456
+
+jenkins_auth_user: admin
+jenkins_auth_pass: jenk789
+
+argocd_auth_user: admin
+argocd_auth_pass: argopass
+
+longhorn_auth_user: admin
+longhorn_auth_pass: longpass
+
+# 📦 Ruta al certificado público de Sealed Secrets (exportado con kubeseal --fetch-cert)
+pub_cert_path: /path/to/pub-cert.pem
+
+# 📘 Kubeconfig para interactuar con el clúster
+kubeconfig_path: "/home/victory/.kube/config"
+
+# 📥 Configuración del Helm Chart de Sealed Secrets
+sealed_secrets_namespace: "kube-system"
+sealed_secrets_release_name: "sealed-secrets"
+sealed_secrets_chart_version: "2.15.3"
