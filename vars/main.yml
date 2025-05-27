@@ -8,23 +8,23 @@ traefik_basic_auth: "admin:$apr1$3L3fT1rX$y2N1R7D2aGZgPfhnxPzTy1"
 
 # 🔐 Prometheus
 prometheus_auth_user: admin
-prometheus_auth_pass: prom123
+prometheus_auth_password: prom123
 
 # 🔐 Grafana
 grafana_auth_user: admin
-grafana_auth_pass: graf456
+grafana_auth_password: graf456
 
 # 🔐 Jenkins
 jenkins_auth_user: admin
-jenkins_auth_pass: jenk789
+jenkins_auth_password: jenk789
 
 # 🔐 ArgoCD
 argocd_auth_user: admin
-argocd_auth_pass: argopass
+argocd_auth_password: argopass
 
 # 🔐 Longhorn
 longhorn_auth_user: admin
-longhorn_auth_pass: longpass
+longhorn_auth_password: longpass
 
 # 📦 Certificado público de Sealed Secrets
 pub_cert_path: /home/victory/secrets/pub-cert.pem

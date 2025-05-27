@@ -1,9 +1,10 @@
 # playbooks\full_pipeline.yml
+
 - name: 🧩 Instalar kubeseal
   import_playbook: install_kubeseal.yml
 
 - name: 🚀 Instalar Sealed Secrets Controller
   import_playbook: install_sealed_secrets.yml
 
-- name: 🔐 Renderizar y cifrar secretos
-  import_playbook: render_and_encrypt_secrets.yml
+- name: 📝 Generar y cifrar secretos
+  import_playbook: generate_and_encrypt_secrets.yml
