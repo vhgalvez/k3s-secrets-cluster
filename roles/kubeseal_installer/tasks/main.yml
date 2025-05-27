@@ -1,7 +1,10 @@
 # roles/kubeseal_installer/tasks/main.yml
-- name: 📦 Definir versión de kubeseal
-  set_fact:
-    version_kubeseal: "0.29.0"
+- name: 📦 Asegurar que 'tar' esté instalado
+  package:
+    name: tar
+    state: present
+  become: true
+  when: ansible_os_family in ["Debian", "RedHat", "Alpine", "Archlinux"]
 
 - name: 📁 Crear directorio temporal
   tempfile:
@@ -9,21 +12,39 @@
     suffix: kubeseal
   register: tmpdir
 
-- name: 📥 Descargar binario de kubeseal v{{ version_kubeseal }}
+- name: 📦 Definir versión de kubeseal
+  set_fact:
+    version_kubeseal: "0.29.0"
+
+- name: 📥 Descargar kubeseal v{{ version_kubeseal }}
   get_url:
-    url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ version_kubeseal }}/kubeseal-{{ version_kubeseal }}-linux-amd64"
-    dest: "{{ tmpdir.path }}/kubeseal"
-    mode: '0755'
+    url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ version_kubeseal }}/kubeseal-{{ version_kubeseal }}-linux-amd64.tar.gz"
+    dest: "{{ tmpdir.path }}/kubeseal.tar.gz"
+    mode: '0644'
+
+- name: 📂 Extraer kubeseal (sin transformaciones)
+  unarchive:
+    src: "{{ tmpdir.path }}/kubeseal.tar.gz"
+    dest: "{{ tmpdir.path }}"
+    remote_src: yes
+
+- name: 🔍 Buscar el binario extraído
+  find:
+    paths: "{{ tmpdir.path }}"
+    patterns: "kubeseal*linux-amd64"
+    use_regex: true
+    recurse: yes
+  register: kubeseal_bin
 
 - name: 📌 Instalar kubeseal en /usr/local/bin
   copy:
-    src: "{{ tmpdir.path }}/kubeseal"
+    src: "{{ kubeseal_bin.files[0].path }}"
     dest: /usr/local/bin/kubeseal
     mode: '0755'
     remote_src: yes
 
 - name: 🔍 Verificar versión instalada de kubeseal
-  command: kubeseal --version
+  command: /usr/local/bin/kubeseal --version
   register: kubeseal_version
   changed_when: false
 
