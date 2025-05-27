@@ -1,4 +1,5 @@
-# roles\kubeseal_installer\tasks\main.yml
+# roles/kubeseal_installer/tasks/main.yml
+
 - name: 📁 Crear directorio temporal
   tempfile:
     state: directory
@@ -11,34 +12,28 @@
 
 - name: 📥 Descargar kubeseal v{{ version_kubeseal }}
   get_url:
-    url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ version_kubeseal }}/kubeseal-{{ version_kubeseal }}-linux-amd64.tar.gz"
-    dest: "{{ tmpdir.path }}/kubeseal.tar.gz"
-    mode: '0644'
-
-- name: 📂 Extraer kubeseal
-  unarchive:
-    src: "{{ tmpdir.path }}/kubeseal.tar.gz"
-    dest: "{{ tmpdir.path }}"
-    remote_src: yes
-
-- name: 🔍 Localizar binario extraído
-  find:
-    paths: "{{ tmpdir.path }}"
-    patterns: "kubeseal"
-    file_type: file
-  register: kubeseal_bin
+    url: "https://github.com/bitnami-labs/sealed-secrets/releases/download/v{{ version_kubeseal }}/kubeseal-{{ version_kubeseal }}-linux-amd64"
+    dest: "{{ tmpdir.path }}/kubeseal"
+    mode: '0755'
 
 - name: 📌 Instalar kubeseal en /usr/local/bin
   copy:
-    src: "{{ kubeseal_bin.files[0].path }}"
+    src: "{{ tmpdir.path }}/kubeseal"
     dest: /usr/local/bin/kubeseal
     mode: '0755'
     remote_src: yes
+
+- name: ✅ Asegurar que el binario tenga permisos de ejecución
+  file:
+    path: /usr/local/bin/kubeseal
+    mode: '0755'
+    state: file
 
 - name: 🔍 Verificar versión instalada de kubeseal
   command: kubeseal --version
   register: kubeseal_version
   changed_when: false
+  failed_when: kubeseal_version.rc != 0
 
 - name: 📢 Mostrar versión instalada
   debug:
